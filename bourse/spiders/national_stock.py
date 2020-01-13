@@ -97,6 +97,7 @@ class NationalStockSpider(scrapy.Spider):
                     formdata=form_data_wxh,
                     callback=self.parse_wxh,
                     meta={'form_data': form_data_wxh},
+                    dont_filter=True,
                 )
             elif 'disclosureInfoController' in url and 'infoResult' in url:
                 yield scrapy.FormRequest(
@@ -104,6 +105,7 @@ class NationalStockSpider(scrapy.Spider):
                     formdata=form_data_zljgcs,
                     callback=self.parse_zljgcs,
                     meta={'form_data': form_data_zljgcs},
+                    dont_filter=True,
                 )
             elif 'PunishmentController' in url and 'infoResultse' in url:
                 yield scrapy.FormRequest(
@@ -111,6 +113,7 @@ class NationalStockSpider(scrapy.Spider):
                     formdata=form_data_jlcf,
                     callback=self.parse_jlvf,
                     meta={'form_data': form_data_jlcf},
+                    dont_filter=True,
                 )
 
     def parse_wxh(self, response):
