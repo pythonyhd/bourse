@@ -37,21 +37,26 @@ def cf_15_filter(item):
         xq_url = item.get("xq_url", '')
         oname = item.get('oname', '')  # 主体
         oname = deal_with_other(oname)
+        cf_cfmc = item.get('cf_cfmc', '')
         cf_jdrq = item.get('cf_jdrq', '')  # 处罚决定日期
         cf_wsh = item.get('cf_wsh', '')  # 处罚文书号
         cf_wsh = deal_with_cf_wsh(cf_wsh)
 
         if xq_url:
             if oname:
-                if cf_jdrq:
-                    if cf_wsh:
-                        _str = str(xq_url) + oname + cf_jdrq + cf_wsh
-                        return get_md5_value(_str)
+                if cf_cfmc:
+                    if cf_jdrq:
+                        if cf_wsh:
+                            _str = str(xq_url) + oname + cf_cfmc + cf_jdrq + cf_wsh
+                            return get_md5_value(_str)
+                        else:
+                            _str = str(xq_url) + oname + cf_cfmc + cf_jdrq
+                            return get_md5_value(_str)
                     else:
-                        _str = str(xq_url) + oname + cf_jdrq
+                        _str = str(xq_url) + oname + cf_cfmc
                         return get_md5_value(_str)
                 else:
-                    _str = xq_url + oname
+                    _str = str(xq_url) + oname
                     return get_md5_value(_str)
             else:
                 _str = xq_url

@@ -31,11 +31,6 @@ class ShanghaiStockSpider(scrapy.Spider):
             'bourse.pipelines.Save2eEsPipeline': 360,
         },
 
-        "SCHEDULER": "scrapy_redis.scheduler.Scheduler",
-        "DUPEFILTER_CLASS": "scrapy_redis.dupefilter.RFPDupeFilter",
-        "SCHEDULER_QUEUE_CLASS": "scrapy_redis.queue.SpiderPriorityQueue",
-        "SCHEDULER_PERSIST": True,
-
         "REDIRECT_ENABLED": False,
         "RETRY_ENABLED": True,
         "RETRY_TIMES": 9,
@@ -326,7 +321,7 @@ class ShanghaiStockSpider(scrapy.Spider):
                 cf_cfmc=cf_cfmc,
                 cf_jdrq=cf_jdrq,
                 cf_type='债券监管-债券纪律处分',
-                cf_cflb='债券监管-债券纪律处分',
+                cf_cflb='纪律处分',
                 regcode=regcode,
                 bzxr=bzxr,
             )
@@ -376,7 +371,7 @@ class ShanghaiStockSpider(scrapy.Spider):
                 cf_jdrq=cf_jdrq,
                 fb_rq=cf_jdrq,
                 cf_type='交易监管-纪律处分',
-                cf_cflb='交易监管-纪律处分',
+                cf_cflb='纪律处分',
             )
             meta_data = {**base_item, **jlcf_item}
             if not xq_url:
@@ -419,7 +414,7 @@ class ShanghaiStockSpider(scrapy.Spider):
                 cf_jdrq=cf_jdrq,
                 fb_rq=cf_jdrq,
                 cf_type=cf_type,
-                cf_cflb=cf_type,
+                cf_cflb='纪律处分',
             )
             meta_data = {**base_item, **jlcf_item}
             if not xq_url:

@@ -27,14 +27,9 @@ class SzJgcsJlcfSpider(scrapy.Spider):
         },
         'ITEM_PIPELINES': {
             'bourse.pipelines.BoursePipeline': 300,
-            'bourse.pipelines.DownloadFilesPipeline': 330,
+            # 'bourse.pipelines.DownloadFilesPipeline': 330,
             'bourse.pipelines.Save2eEsPipeline': 360,
         },
-
-        "SCHEDULER": "scrapy_redis.scheduler.Scheduler",
-        "DUPEFILTER_CLASS": "scrapy_redis.dupefilter.RFPDupeFilter",
-        "SCHEDULER_QUEUE_CLASS": "scrapy_redis.queue.SpiderPriorityQueue",
-        "SCHEDULER_PERSIST": True,
 
         "REDIRECT_ENABLED": False,
         "RETRY_ENABLED": True,
@@ -43,10 +38,7 @@ class SzJgcsJlcfSpider(scrapy.Spider):
     }
 
     def start_requests(self):
-        """
-        入口
-        :return:
-        """
+        """入口"""
         start_urls = [
             # 监管措施
             'http://www.szse.cn/api/report/ShowReport/data?SHOWTYPE=JSON&CATALOGID=1800_jgxxgk&TABKEY=tab1&PAGENO=1&selectBkmc=0',
@@ -92,11 +84,7 @@ class SzJgcsJlcfSpider(scrapy.Spider):
                 yield scrapy.Request(url=url, callback=self.parse_zqxxjlcf, dont_filter=True, priority=5)
 
     def parse_jgcs(self, response):
-        """
-        解析-监管措施
-        :param response:
-        :return:item
-        """
+        """解析-监管措施"""
         # 解析
         data_list = json.loads(response.text)
         data = data_list[0].get('data')
@@ -114,7 +102,7 @@ class SzJgcsJlcfSpider(scrapy.Spider):
                 regcode=gkxx_gsdm,
                 bzxr=gkxx_gsjc,
                 cf_type=gkxx_jgcs,
-                xx_cflb=gkxx_jgcs,
+                cf_cflb=gkxx_jgcs,
                 nsrlx=gkxx_sjdx,
                 cf_jdrq=gkxx_gdrq,
                 cf_xzjg='深圳证券交易所',
@@ -151,11 +139,7 @@ class SzJgcsJlcfSpider(scrapy.Spider):
                 )
 
     def parse_jlcf(self, response):
-        """
-        解析-纪律处分
-        :param response:
-        :return:
-        """
+        """解析-纪律处分"""
         # 解析
         results = json.loads(response.text)
         data = results[1].get('data')
@@ -208,11 +192,7 @@ class SzJgcsJlcfSpider(scrapy.Spider):
                 )
 
     def parse_jgcs_pdf(self, response):
-        """
-        解析-监管措施pdf
-        :param response:
-        :return:
-        """
+        """解析-监管措施pdf"""
         jgcs_item = response.meta.get('jgcs_item')
         try:
             content_list = self.parse_pdf(response)
@@ -224,7 +204,7 @@ class SzJgcsJlcfSpider(scrapy.Spider):
         content = reduce(lambda x, y: x + y, [re_com.sub('', i) for i in content_list])
         # print(f'pdf文本={content}')
         oname_pattern = re.compile(r'(关于对)(.*?(公司|的))')
-        cf_wsh_pattern = re.compile(r'((?:监管函公司部|监管函).*?号)')
+        cf_wsh_pattern = re.compile(r'(监管函公司部|监管函|关注函|问询函)(.*?号)')
         cf_sy_pattern = re.compile(r'：(.*?(?:违反了|你的上述行为违反了|你公司的上述行为违反了))')
         cf_yj_pattern = re.compile(r'((?:违反了|你的上述行为违反了).*?规定)')
         cf_jg_pattern = re.compile(r'(现对你.*?。)')
@@ -235,7 +215,7 @@ class SzJgcsJlcfSpider(scrapy.Spider):
         else:
             oname = oname
         cf_wsh = cf_wsh_pattern.search(content)
-        cf_wsh = cf_wsh.group(1) if cf_wsh else ''
+        cf_wsh = cf_wsh.group(2) if cf_wsh else ''
         cf_sy = cf_sy_pattern.search(content)
         cf_sy = cf_sy.group(1) if cf_sy else ''
         cf_yj = cf_yj_pattern.search(content)
@@ -256,11 +236,7 @@ class SzJgcsJlcfSpider(scrapy.Spider):
         yield last_item
 
     def parse_jlcf_pdf(self, response):
-        '''
-        解析-纪律处分pdf
-        :param response:
-        :return:
-        '''
+        '''解析-纪律处分pdf'''
         jlcf_item = response.meta.get('jlcf_item')
         try:
             content_list = self.parse_pdf(response)
@@ -299,11 +275,7 @@ class SzJgcsJlcfSpider(scrapy.Spider):
         yield last_item
 
     def parse_wxhj_main(self, response):
-        """
-        解析-问询函件-主板模块
-        :param response:
-        :return:
-        """
+        """解析-问询函件-主板模块"""
         # 解析
         results = json.loads(response.text)
         data = results[0].get('data')
@@ -363,11 +335,7 @@ class SzJgcsJlcfSpider(scrapy.Spider):
                 )
 
     def parse_main_pdf(self, response):
-        """
-        解析-问询函件-主板pdf
-        :param response:
-        :return:
-        """
+        """解析-问询函件-主板pdf"""
         re_com = re.compile(r'\r|\n|\t|\s')
         main_item = response.meta.get('main_item')
         main_item['xq_url'] = response.url
@@ -381,7 +349,7 @@ class SzJgcsJlcfSpider(scrapy.Spider):
         content = reduce(lambda x, y: x + y, [re_com.sub('', i) for i in content_list])
         main_item['ws_nr_txt'] = content
         oname_pattern = re.compile(r'(关于对)(.*?(公司|给予))')
-        cf_wsh_pattern = re.compile(r'((?:问询函|关注函|补充材料有关事项的函).*?号)')
+        cf_wsh_pattern = re.compile(r'(监管函公司部|监管函|关注函|问询函|补充材料有关事项的函)(.*?号)')
         cf_sy_pattern = re.compile(r'(存在以下问题：|违规事实：|存在以下违规行为：|董事会：)(.*?。)')
         cf_yj_pattern = re.compile(r'((违反了本所|依据本所|严格遵守).*?规定)')
         cf_jg_pattern = re.compile(r'((本所决定|本所作出如下处分：|本所作出如下处分决定：|请你公司说明).*?。)')
@@ -394,7 +362,7 @@ class SzJgcsJlcfSpider(scrapy.Spider):
 
         main_item['oname'] = oname
         cf_wsh = cf_wsh_pattern.search(content)
-        main_item['cf_wsh'] = cf_wsh.group(1) if cf_wsh else ''
+        main_item['cf_wsh'] = cf_wsh.group(2) if cf_wsh else ''
         cf_sy = cf_sy_pattern.search(content)
         main_item['cf_sy'] = cf_sy.group(2) if cf_sy else ''
         cf_yj = cf_yj_pattern.search(content)
@@ -405,11 +373,7 @@ class SzJgcsJlcfSpider(scrapy.Spider):
         yield main_item
 
     def parse_zhongxb(self, response):
-        """
-        解析-问询函件-中小企业版模块
-        :param response:
-        :return:
-        """
+        """解析-问询函件-中小企业版模块"""
         # 解析
         results = json.loads(response.text)
         data = results[1].get('data')
@@ -469,11 +433,7 @@ class SzJgcsJlcfSpider(scrapy.Spider):
                 )
 
     def parse_zhongxb_pdf(self, response):
-        """
-        解析-问询函件-中小企业板PDF
-        :param response:
-        :return:
-        """
+        """解析-问询函件-中小企业板PDF"""
         re_com = re.compile(r'\r|\n|\t|\s')
         zxqyb_item = response.meta.get('zxqyb_item')
 
@@ -485,7 +445,7 @@ class SzJgcsJlcfSpider(scrapy.Spider):
 
         content = reduce(lambda x, y: x + y, [re_com.sub('', i) for i in content_list])
         oname_pattern = re.compile(r'(关于对)(.*?(公司|给予))')
-        cf_wsh_pattern = re.compile(r'((?:问询函|关注函|补充材料有关事项的函).*?号)')
+        cf_wsh_pattern = re.compile(r'(监管函公司部|监管函|关注函|问询函|补充材料有关事项的函)(.*?号)')
         cf_sy_pattern = re.compile(r'(存在以下问题：|违规事实：|存在以下违规行为：|董事会：)(.*?。)')
         cf_yj_pattern = re.compile(r'((违反了本所|依据本所|严格遵守|按照国家法律).*?规定)')
         cf_jg_pattern = re.compile(r'((本所决定|本所作出如下处分：|本所作出如下处分决定：|请你公司说明|请你公司).*?。)')
@@ -497,7 +457,7 @@ class SzJgcsJlcfSpider(scrapy.Spider):
             oname = oname
 
         cf_wsh = cf_wsh_pattern.search(content)
-        cf_wsh = cf_wsh.group(1) if cf_wsh else ''
+        cf_wsh = cf_wsh.group(2) if cf_wsh else ''
         cf_sy = cf_sy_pattern.search(content)
         cf_sy = cf_sy.group(2) if cf_sy else ''
         cf_yj = cf_yj_pattern.search(content)
@@ -519,11 +479,7 @@ class SzJgcsJlcfSpider(scrapy.Spider):
         yield last_item
 
     def parse_chuangyb(self, response):
-        """
-        解析-问询函件-创业板模块
-        :param response:
-        :return:
-        """
+        """解析-问询函件-创业板模块"""
         # 解析
         results = json.loads(response.text)
         data = results[2].get('data')
@@ -583,12 +539,7 @@ class SzJgcsJlcfSpider(scrapy.Spider):
                 )
 
     def parse_chuangyb_pdf(self, response):
-        """
-        解析-问询函件-创业板模块PDF
-        :param response:
-        :return:
-        """
-
+        """解析-问询函件-创业板模块PDF"""
         re_com = re.compile(r'\r|\n|\t|\s')
         cyb_item = response.meta.get('cyb_item')
 
@@ -602,7 +553,7 @@ class SzJgcsJlcfSpider(scrapy.Spider):
 
         content = reduce(lambda x, y: x + y, [re_com.sub('', i) for i in content_list])
         oname_pattern = re.compile(r'(关于对)(.*?(公司|给予))')
-        cf_wsh_pattern = re.compile(r'((?:问询函|关注函|补充材料有关事项的函).*?号)')
+        cf_wsh_pattern = re.compile(r'(监管函公司部|监管函|关注函|问询函|补充材料有关事项的函)(.*?号)')
         cf_sy_pattern = re.compile(r'(存在以下问题：|违规事实：|存在以下违规行为：|董事会：)(.*?。)')
         cf_yj_pattern = re.compile(r'((违反了本所|依据本所|严格遵守|按照国家法律).*?规定)')
         cf_jg_pattern = re.compile(r'((本所决定|本所作出如下处分：|本所作出如下处分决定：|请你公司说明|请你公司).*?。)')
@@ -614,7 +565,7 @@ class SzJgcsJlcfSpider(scrapy.Spider):
             oname = oname
 
         cf_wsh = cf_wsh_pattern.search(content)
-        cf_wsh = cf_wsh.group(1) if cf_wsh else ''
+        cf_wsh = cf_wsh.group(2) if cf_wsh else ''
         cf_sy = cf_sy_pattern.search(content)
         cf_sy = cf_sy.group(2) if cf_sy else ''
         cf_yj = cf_yj_pattern.search(content)
@@ -636,11 +587,7 @@ class SzJgcsJlcfSpider(scrapy.Spider):
         yield last_item
 
     def parse_cfycfjv(self, response):
-        """
-        解析-上市公司诚信档案-处罚与处分记录
-        :param response:
-        :return:
-        """
+        """解析-上市公司诚信档案-处罚与处分记录"""
         # 解析
         results = json.loads(response.text)
         data = results[0].get('data')
@@ -698,11 +645,7 @@ class SzJgcsJlcfSpider(scrapy.Spider):
                 )
 
     def parse_zjjgcfycf(self, response):
-        """
-        解析-上市公司诚信档案-中介机构处罚与处分信息
-        :param response:
-        :return:
-        """
+        """解析-上市公司诚信档案-中介机构处罚与处分信息"""
         # 解析
         results = json.loads(response.text)
         data = results[0].get('data')
@@ -751,11 +694,7 @@ class SzJgcsJlcfSpider(scrapy.Spider):
                     logger.info(f'中介机构处罚与处分信息url非文件:{index_url}')
 
     def parse_cfycfjv_pdf(self, response):
-        """
-        解析-上市公司诚信档案-处罚与处分记录PDF
-        :param response:
-        :return:
-        """
+        """解析-上市公司诚信档案-处罚与处分记录PDF"""
         re_com = re.compile(r'\r|\n|\t|\s')
         cfycfjv_item = response.meta.get('cfycfjv_item')
         dsr = response.meta.get('dsr')
@@ -765,12 +704,12 @@ class SzJgcsJlcfSpider(scrapy.Spider):
             logger.error(f'解析出错{repr(e)}')
             content_list = []
         content = reduce(lambda x, y: x + y, [re_com.sub('', i) for i in content_list])
-        cf_wsh_pattern = re.compile(r'((?:问询函|关注函|补充材料有关事项的函).*?号)')
+        cf_wsh_pattern = re.compile(r'(监管函公司部|监管函|关注函|问询函|补充材料有关事项的函)(.*?号)')
         cf_sy_pattern = re.compile(r'(存在以下问题：|违规事实：|存在以下违规行为：|董事会：|存在以下违规事实：)(.*?。)')
         cf_yj_pattern = re.compile(r'((违反了本所|依据本所|严格遵守|按照国家法律).*?规定)')
         cf_jg_pattern = re.compile(r'((本所决定|本所作出如下处分：|本所作出如下处分决定：).*?。)')
         cf_wsh = cf_wsh_pattern.search(content)
-        cf_wsh = cf_wsh.group(1) if cf_wsh else ''
+        cf_wsh = cf_wsh.group(2) if cf_wsh else ''
         cf_sy = cf_sy_pattern.search(content)
         cf_sy = cf_sy.group(2) if cf_sy else ''
         cf_yj = cf_yj_pattern.search(content)
@@ -807,12 +746,12 @@ class SzJgcsJlcfSpider(scrapy.Spider):
             logger.error(f'解析出错{repr(e)}')
             content_list = []
         content = reduce(lambda x, y: x + y, [re_com.sub('', i) for i in content_list])
-        cf_wsh_pattern = re.compile(r'((?:问询函|关注函|补充材料有关事项的函).*?号)')
+        cf_wsh_pattern = re.compile(r'(监管函公司部|监管函|关注函|问询函|补充材料有关事项的函)(.*?号)')
         cf_sy_pattern = re.compile(r'(存在以下问题：|违规事实：|存在以下违规行为：|董事会：|存在以下违规事实：)(.*?。)')
         cf_yj_pattern = re.compile(r'((违反了本所|依据本所|严格遵守|按照国家法律).*?规定)')
         cf_jg_pattern = re.compile(r'((本所决定|本所作出如下处分：|本所作出如下处分决定：).*?。)')
         cf_wsh = cf_wsh_pattern.search(content)
-        cf_wsh = cf_wsh.group(1) if cf_wsh else ''
+        cf_wsh = cf_wsh.group(2) if cf_wsh else ''
         cf_sy = cf_sy_pattern.search(content)
         cf_sy = cf_sy.group(2) if cf_sy else ''
         cf_yj = cf_yj_pattern.search(content)
@@ -864,7 +803,7 @@ class SzJgcsJlcfSpider(scrapy.Spider):
                 regcode=sjzh,
                 cf_jdrq=fhrq,
                 cf_type=lx,
-                cf_cflb=lx,
+                cf_cflb='问询函',
 
                 cf_xzjg='深圳证券交易所',
                 site_id=36799,
@@ -930,7 +869,7 @@ class SzJgcsJlcfSpider(scrapy.Spider):
                 regcode=sjzh,
                 cf_jdrq=fhrq,
                 cf_type=lx,
-                cf_cflb=lx,
+                cf_cflb='监管措施',
 
                 cf_xzjg='深圳证券交易所',
                 site_id=36799,
@@ -996,7 +935,7 @@ class SzJgcsJlcfSpider(scrapy.Spider):
                 regcode=sjzh,
                 cf_jdrq=fhrq,
                 cf_type=lx,
-                cf_cflb=lx,
+                cf_cflb='纪律处分',
 
                 cf_xzjg='深圳证券交易所',
                 site_id=36799,

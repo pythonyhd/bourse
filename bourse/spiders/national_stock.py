@@ -32,11 +32,6 @@ class NationalStockSpider(scrapy.Spider):
             'bourse.pipelines.Save2eEsPipeline': 360,
         },
 
-        "SCHEDULER": "scrapy_redis.scheduler.Scheduler",
-        "DUPEFILTER_CLASS": "scrapy_redis.dupefilter.RFPDupeFilter",
-        "SCHEDULER_QUEUE_CLASS": "scrapy_redis.queue.SpiderPriorityQueue",
-        "SCHEDULER_PERSIST": True,
-
         "REDIRECT_ENABLED": False,
         "RETRY_ENABLED": True,
         "RETRY_TIMES": 9,
@@ -205,7 +200,7 @@ class NationalStockSpider(scrapy.Spider):
                     regcode=companyCd,
                     bzxr=companyName,
                     cf_type='监管公开信息-自律监管措施',
-                    cf_cflb='监管公开信息-自律监管措施',
+                    cf_cflb='自律监管措施',
                     cf_jdrq=publishDate,
                     fb_rq=publishDate,
                     bz='全国中小企业股份转让系统-监管公开信息-自律监管措施',
